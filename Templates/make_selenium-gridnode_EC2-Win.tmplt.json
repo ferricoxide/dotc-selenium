@@ -497,6 +497,7 @@
                   { "Ref": "AWS::NoValue" }
                 ]
               },
+              "watchmaker-launch",
               "browser-installers",
               "browser-driver-installers",
               "nss-setup",
