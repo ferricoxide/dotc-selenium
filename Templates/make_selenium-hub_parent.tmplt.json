@@ -63,7 +63,16 @@
       ]
     }
   },
-  "Outputs": {},
+  "Outputs": {
+    "Outputs": {
+    "SeleniumElbFqdn": {
+      "Description": "Selenium Grid-Hub's IP address",
+      "Export": {
+        "Name" : { "Fn::Sub": "${AWS::StackName}-ElbDnsName" }
+      },
+      "Value": { "Fn::GetAtt": [ "ElbRes", "Outputs.SeleniumElbFqdn" ] }
+    }
+  },
   "Parameters": {
     "AdminPubkeyURL": {
       "AllowedPattern": "^$|^http://.*$|^https://.*$",

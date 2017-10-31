@@ -286,7 +286,53 @@
           ]
         },
         "AWS::CloudFormation::Init": {
+          "admkey-install": {
+            "files": {
+              "/tmp/adminkeys.pub": {
+                "source": { "Ref": "AdminPubkeyURL" },
+                "group": "root",
+                "mode": "000600",
+                "owner": "root"
+              },
+              "/tmp/admkey.sh": {
+                "content": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "#!/bin/bash\n\n",
+                      "PROVHOME=$(getent passwd ",
+                      { "Ref": "ProvisionUser" },
+                      " | awk -F\":\" '{print $6}')\n",
+                      "\n",
+                      "install -b -m 000600 -o ",
+                      { "Ref": "ProvisionUser" },
+                      " -g ",
+                      { "Ref": "ProvisionUser" },
+                      " /tmp/adminkeys.pub ${PROVHOME}/.ssh/authorized_keys\n",
+                      "\n"
+                    ]
+                  ]
+                },
+                "group": "root",
+                "mode": "000700",
+                "owner": "root"
+              }
+            },
+            "commands": {
+              "1-admkey-install": {
+                "command": "bash -xe /tmp/admkey.sh"
+              }
+            }
+          },
           "appinstall": {
+            "files": {
+              "/etc/cfn/appinstall.sh": {
+                "group": "root",
+                "mode": "000755",
+                "owner": "root",
+                "source" : { "Ref" : "AppPrepScriptUri" }
+              },
+            }
             "commands": {
               "10-appinstall": {
                 "command": {
@@ -306,11 +352,11 @@
           "configSets": {
             "launch": [
               "setup",
+              "watchmaker-install",
               "selenium-firewalld",
               "osprep",
-              "appinstall",
-              "watchmaker-install",
               "watchmaker-launch",
+              "appinstall",
               "finalize",
               {
                 "Fn::If": [
@@ -524,12 +570,6 @@
                 "group": "root",
                 "mode": "000400",
                 "owner": "root"
-              },
-              "/etc/cfn/appinstall.sh": {
-                "group": "root",
-                "mode": "000755",
-                "owner": "root",
-                "source" : { "Ref" : "AppPrepScriptUri" }
               },
               "/etc/cfn/os_prep.sh": {
                 "group": "root",
@@ -767,28 +807,6 @@
                 "         exit 1\n",
                 "      }\n",
                 "      \n",
-                "      # Add admin SSH keys to the ",
-                       { "Ref": "ProvisionUser" },
-                       " account\n",
-                "      export PROVHOME=/home/",
-                       { "Ref": "ProvisionUser" },
-                       "\n",
-                "      if [[ ! -d ${PROVHOME}/.ssh ]]\n",
-                "      then\n",
-                "         printf \"Waiting for ${PROVHOME}/.ssh to be created\"\n",
-                "         while [[ ! -d ${PROVHOME}/.ssh ]]\n",
-                "         do\n",
-                "            printf \".\"\n",
-                "            sleep 5\n",
-                "         done\n",
-                "         echo \"Found.\"\n",
-                "      fi\n",
-                "      \n",
-                "      curl -skL ",
-                       { "Ref": "AdminPubkeyURL" },
-                       " >> ${PROVHOME}/.ssh/authorized_keys || ",
-                       "err_exit 'Failed to install admin-users keys'\n",
-                "      \n",
                 "      # Install RPMs needed by the cfn-tools.\n",
                 "      yum --enablerepo=",
                        { "Ref": "EpelRepo" },
@@ -811,36 +829,21 @@
                        " --stack ",
                        { "Ref": "AWS::StackName" },
                        " --resource Ec2Instance",
-                {
-                  "Fn::If": [
-                    "AssignInstanceRole",
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          " --role ",
-                          { "Ref": "InstanceRole" }
-                        ]
-                      ]
-                    },
-                    ""
-                  ]
-                },
-                {
-                  "Fn::If": [
-                    "UseCfnUrl",
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          " --url ",
-                          { "Ref": "CfnEndpointUrl" }
-                        ]
-                      ]
-                    },
-                    ""
-                  ]
-                },
+                       {
+                         "Fn::If": [
+                           "UseCfnUrl",
+                           {
+                             "Fn::Join": [
+                               "",
+                               [
+                                 " --url ",
+                                 { "Ref": "CfnEndpointUrl" }
+                               ]
+                             ]
+                           },
+                           ""
+                         ]
+                       },
                        " --region ",
                        { "Ref": "AWS::Region" },
                        " || err_exit echo 'cfn-init FAILED! Aborting!'\n"
