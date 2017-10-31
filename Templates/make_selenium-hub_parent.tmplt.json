@@ -64,13 +64,19 @@
     }
   },
   "Outputs": {
-    "Outputs": {
     "SeleniumElbFqdn": {
-      "Description": "Selenium Grid-Hub's IP address",
+      "Description": "Selenium Grid-Hubs ELB's FQDN",
       "Export": {
         "Name" : { "Fn::Sub": "${AWS::StackName}-ElbDnsName" }
       },
       "Value": { "Fn::GetAtt": [ "ElbRes", "Outputs.SeleniumElbFqdn" ] }
+    },
+    "SeleniumHubInstanceId": {
+      "Description": "Selenium Grid-Hub's IP address",
+      "Export": {
+        "Name" : { "Fn::Sub": "${AWS::StackName}-HubInstanceId" }
+      },
+      "Value": { "Fn::GetAtt": [ "Ec2Res", "Outputs.Ec2InstanceId" ] }
     }
   },
   "Parameters": {

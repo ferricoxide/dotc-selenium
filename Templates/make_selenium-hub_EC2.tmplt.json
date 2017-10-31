@@ -326,13 +326,13 @@
           },
           "appinstall": {
             "files": {
-              "/etc/cfn/appinstall.sh": {
+              "/etc/cfn/scripts/appinstall.sh": {
                 "group": "root",
                 "mode": "000755",
                 "owner": "root",
                 "source" : { "Ref" : "AppPrepScriptUri" }
-              },
-            }
+              }
+            },
             "commands": {
               "10-appinstall": {
                 "command": {
@@ -447,7 +447,7 @@
           "osprep": {
             "commands": {
               "10-osprep": {
-                "command": "bash -xe /etc/cfn/os_prep.sh"
+                "command": "bash -xe /etc/cfn/scripts/os_prep.sh"
               }
             }
           },
